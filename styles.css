@@ -60,7 +60,7 @@ body {
     grid-template-columns: 180px 1fr auto;
     align-items: center;
     max-width: 100%;
-    margin: 0 7rem;
+    /* margin: 0 7rem; */
     padding: 0 1.5rem;
     width: calc(100% - 14rem);
     height: 100%;
@@ -278,7 +278,7 @@ body {
     .main-header .container,
     .sticky-header .container {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         flex-wrap: wrap;
         min-height: 70px;
         padding: 0 1.5rem;
@@ -333,16 +333,17 @@ body {
 
     .main-header .btn-contact,
     .sticky-header .btn-contact {
-        order: 2;
-        margin-left: auto;
-        margin-right: 1rem;
-        padding: 0.5rem 1.25rem;
-        font-size: 0.875rem;
+        display: none;
+    }
+
+    .logo {
+        order: 1 !important;
     }
 
     .mobile-toggle {
         display: flex;
-        order: 1;
+        order: 2 !important;
+        margin-left: auto;
     }
 
     .logo-img {
@@ -817,7 +818,16 @@ body {
    HERO SECTION - RESPONSIVE
    ============================================ */
 @media (max-width: 991px) {
+    .sticky-header {
+        display: none !important;
+    }
+
+    .hero-section {
+        padding-top: 3rem;
+    }
+
     .hero-content {
+        display: flex;
         flex-direction: column;
         align-items: center;
     }
@@ -825,11 +835,14 @@ body {
     .hero-image-wrapper {
         flex: 0 0 auto;
         max-width: 100%;
+        order: 2;
     }
 
     .hero-text {
-        text-align: center;
-        margin-top: 2rem;
+        text-align: left;
+        margin-top: 0;
+        order: 1;
+        margin-bottom: 2rem;
     }
 
     .thumbnail-previews {
@@ -846,15 +859,15 @@ body {
     }
 
     .features-list li {
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .hero-buttons {
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .shipping-info {
-        justify-content: center;
+        justify-content: flex-start;
     }
 }
 
@@ -880,6 +893,11 @@ body {
 
     .company-logos {
         gap: 1rem;
+        flex-wrap: nowrap;
+    }
+
+    .company-logo:nth-child(n+4) {
+        display: none;
     }
 }
 
@@ -1211,25 +1229,36 @@ body {
 /* ============================================
    REQUEST QUOTE MODAL
    ============================================ */
+/* ============================================
+   REQUEST QUOTE MODAL
+   ============================================ */
 .request-quote-overlay {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2000;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+    animation: fadeIn 0.3s ease;
 }
 
 .request-quote-overlay.active {
-    opacity: 1;
-    visibility: visible;
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .request-quote-content {
@@ -3521,6 +3550,18 @@ body {
     font-size: 0.875rem;
     color: #6c757d;
     font-style: italic;
+}
+
+/* Customer Details */
+.customer-details {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.customer-icon-wrapper {
+    flex-shrink: 0;
+    margin-top: 2rem;
 }
 
 /* Responsive Design for Testimonials */
