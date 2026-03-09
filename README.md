@@ -28,13 +28,14 @@ Gushwork Assignment/
 ├── index.html           # Main HTML structure
 ├── styles.css           # All styling and responsive design
 ├── script.js            # Interactive functionality
-├── image/               # Image assets
-│   ├── logo.png
-│   └── ...
-├── icons/               # Icon assets
-│   ├── Vector-nav.png
-│   ├── Frame_user.png
-│   └── ...
+├── assets/              # Asset files
+│   ├── images/          # Image assets
+│   │   ├── logo.png
+│   │   └── ...
+│   └── icons/           # Icon assets
+│       ├── Vector-nav.png
+│       ├── Frame_user.png
+│       └── ...
 └── README.md            # Project documentation
 ```
 

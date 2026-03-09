@@ -18,11 +18,50 @@
     // ============================================
     // STICKY HEADER
     // ============================================
+    // Track scroll direction
+    let lastScrollY = window.pageYOffset;
+    let scrollDirection = 'down';
+    let firstFoldHeight = 80; // Default fallback value
+
+    // Dynamically calculate the first fold height (hero section + main header)
+    function calculateFirstFoldHeight() {
+        const heroSection = document.getElementById('heroSection');
+        const mainHeader = document.getElementById('mainHeader');
+
+        let height = 80; // Default fallback
+
+        if (mainHeader) {
+            height += mainHeader.offsetHeight;
+        }
+
+        if (heroSection) {
+            // Use the full hero section height as the first fold
+            height = (mainHeader ? mainHeader.offsetHeight : 0) + heroSection.offsetHeight;
+        }
+
+        firstFoldHeight = height;
+        return height;
+    }
+
+    // Initialize first fold height
+    calculateFirstFoldHeight();
+
     function handleStickyHeader() {
         const scrollY = window.pageYOffset;
 
-        // Show sticky header when scrolled past main header
-        if (scrollY > 80) {
+        // Determine scroll direction
+        if (scrollY > lastScrollY) {
+            scrollDirection = 'down';
+        } else if (scrollY < lastScrollY) {
+            scrollDirection = 'up';
+        }
+
+        // Update last scroll position
+        lastScrollY = scrollY;
+
+        // Show sticky header when scrolling DOWN past first fold
+        // Hide sticky header when scrolling UP
+        if (scrollY > firstFoldHeight && scrollDirection === 'down') {
             stickyHeader.classList.add('visible');
         } else {
             stickyHeader.classList.remove('visible');
@@ -38,6 +77,15 @@
             });
             ticking = true;
         }
+    });
+
+    // Recalculate first fold height on window resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            calculateFirstFoldHeight();
+        }, 250);
     });
 
     // ============================================
@@ -90,28 +138,65 @@
     });
 
     // ============================================
-    // HERO IMAGE CAROUSEL
+    // HERO IMAGE CAROUSEL WITH ZOOM
     // ============================================
     const heroPrev = document.getElementById('heroPrev');
     const heroNext = document.getElementById('heroNext');
     const heroImage = document.getElementById('heroImage');
+    const imageSlider = document.getElementById('imageSlider');
+    const zoomLens = document.getElementById('zoomLens');
+    const zoomPreview = document.getElementById('zoomPreview');
+    const zoomPreviewImage = document.getElementById('zoomPreviewImage');
 
     // Sample images - replace with actual images
     const heroImages = [
-        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='350' viewBox='0 0 500 350'%3E%3Crect fill='%23f0f0f0' width='500' height='350'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%23999'%3EHDPE Pipes Product Image 1%3C/text%3E%3C/svg%3E",
-        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='350' viewBox='0 0 500 350'%3E%3Crect fill='%23e8e8e8' width='500' height='350'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%23999'%3EHDPE Pipes Product Image 2%3C/text%3E%3C/svg%3E",
-        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='350' viewBox='0 0 500 350'%3E%3Crect fill='%23d8d8d8' width='500' height='350'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%23999'%3EHDPE Pipes Product Image 3%3C/text%3E%3C/svg%3E"
+        "assets/images/Fishnet Manufacturing.jpg",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='350' viewBox='0 0 500 350'%3E%3Crect fill='%23f0f0f0' width='500' height='350'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%23999'%3EHDPE Pipes Product Image 2%3C/text%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='350' viewBox='0 0 500 350'%3E%3Crect fill='%23e8e8e8' width='500' height='350'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%23999'%3EHDPE Pipes Product Image 3%3C/text%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='350' viewBox='0 0 500 350'%3E%3Crect fill='%23d8d8d8' width='500' height='350'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%23999'%3EHDPE Pipes Product Image 4%3C/text%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='350' viewBox='0 0 500 350'%3E%3Crect fill='%23c8c8c8' width='500' height='350'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%23999'%3EHDPE Pipes Product Image 5%3C/text%3E%3C/svg%3E"
     ];
 
     let currentImageIndex = 0;
+    const ZOOM_LEVEL = 2.5; // Magnification level
 
     function updateHeroImage() {
         heroImage.style.opacity = '0';
         setTimeout(function() {
             heroImage.src = heroImages[currentImageIndex];
+            zoomPreviewImage.src = heroImages[currentImageIndex];
             heroImage.style.opacity = '1';
         }, 200);
     }
+
+    // ============================================
+    // THUMBNAIL PREVIEWS FUNCTIONALITY
+    // ============================================
+    const thumbnails = document.querySelectorAll('.thumbnail');
+
+    function updateThumbnails() {
+        thumbnails.forEach(function(thumb, index) {
+            if (index === currentImageIndex) {
+                thumb.classList.add('active');
+            } else {
+                thumb.classList.remove('active');
+            }
+        });
+    }
+
+    // Add click handlers to thumbnails
+    thumbnails.forEach(function(thumb, index) {
+        thumb.addEventListener('click', function() {
+            if (index < heroImages.length) {
+                currentImageIndex = index;
+                updateHeroImage();
+                updateThumbnails();
+            }
+        });
+    });
+
+    // Initialize thumbnails
+    updateThumbnails();
 
     if (heroPrev) {
         heroPrev.addEventListener('click', function() {
@@ -120,6 +205,7 @@
                 currentImageIndex = heroImages.length - 1;
             }
             updateHeroImage();
+            updateThumbnails();
         });
     }
 
@@ -130,6 +216,7 @@
                 currentImageIndex = 0;
             }
             updateHeroImage();
+            updateThumbnails();
         });
     }
 
@@ -137,6 +224,121 @@
     if (heroImage) {
         heroImage.style.transition = 'opacity 0.2s ease';
     }
+
+    // ============================================
+    // IMAGE ZOOM ON HOVER FUNCTIONALITY
+    // ============================================
+    function handleZoom(e) {
+        if (!imageSlider || !zoomLens || !zoomPreview || !zoomPreviewImage) return;
+
+        const rect = imageSlider.getBoundingClientRect();
+
+        // Get mouse position relative to the image
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Check if mouse is within the image bounds
+        if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+            hideZoom();
+            return;
+        }
+
+        // Show zoom elements
+        zoomLens.style.display = 'block';
+        zoomPreview.classList.add('active');
+
+        // Position the zoom lens (centered on mouse)
+        zoomLens.style.left = x + 'px';
+        zoomLens.style.top = y + 'px';
+
+        // Calculate position for zoom preview
+        // The preview shows a magnified portion of the image
+        const lensWidth = zoomLens.offsetWidth;
+        const lensHeight = zoomLens.offsetHeight;
+
+        // Calculate the percentage position
+        const xPercent = (x / rect.width) * 100;
+        const yPercent = (y / rect.height) * 100;
+
+        // Set the background position for the preview image
+        // Using transform to scale and position
+        const previewWidth = zoomPreview.offsetWidth;
+        const previewHeight = zoomPreview.offsetHeight;
+
+        const moveX = (xPercent * previewWidth / 100) * ZOOM_LEVEL - previewWidth / 2;
+        const moveY = (yPercent * previewHeight / 100) * ZOOM_LEVEL - previewHeight / 2;
+
+        zoomPreviewImage.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+        zoomPreviewImage.style.transform = `scale(${ZOOM_LEVEL})`;
+    }
+
+    function hideZoom() {
+        if (zoomLens) {
+            zoomLens.style.display = 'none';
+        }
+        if (zoomPreview) {
+            zoomPreview.classList.remove('active');
+        }
+    }
+
+    // Add zoom event listeners to image slider
+    if (imageSlider) {
+        imageSlider.addEventListener('mousemove', function(e) {
+            // Only enable zoom on larger screens
+            if (window.innerWidth > 768) {
+                handleZoom(e);
+            }
+        });
+
+        imageSlider.addEventListener('mouseenter', function() {
+            if (window.innerWidth > 768 && zoomLens) {
+                zoomLens.style.display = 'block';
+            }
+        });
+
+        imageSlider.addEventListener('mouseleave', hideZoom);
+
+        // Also handle touch devices
+        imageSlider.addEventListener('touchstart', function(e) {
+            if (window.innerWidth > 768 && e.touches.length === 1) {
+                const touch = e.touches[0];
+                handleZoom(touch);
+            }
+        });
+
+        imageSlider.addEventListener('touchmove', function(e) {
+            if (window.innerWidth > 768 && e.touches.length === 1) {
+                e.preventDefault(); // Prevent scrolling while zooming
+                const touch = e.touches[0];
+                handleZoom(touch);
+            }
+        });
+
+        imageSlider.addEventListener('touchend', hideZoom);
+    }
+
+    // Update zoom preview image source when hero image changes
+    if (heroImage && zoomPreviewImage) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                    zoomPreviewImage.src = heroImage.src;
+                }
+            });
+        });
+        observer.observe(heroImage, { attributes: true });
+    }
+
+    // Disable zoom on window resize to smaller screens
+    let zoomResizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(zoomResizeTimer);
+        zoomResizeTimer = setTimeout(function() {
+            if (window.innerWidth <= 768) {
+                hideZoom();
+            }
+        }, 250);
+    });
 
     // ============================================
     // FREQUENTLY BOUGHT TOGETHER CAROUSEL
@@ -207,10 +409,10 @@
     }
 
     // Update carousel on window resize
-    let resizeTimer;
+    let fbtResizeTimer;
     window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
+        clearTimeout(fbtResizeTimer);
+        fbtResizeTimer = setTimeout(function() {
             fbtIndex = 0;
             updateFbtCarousel();
         }, 250);
